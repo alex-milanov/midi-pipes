@@ -2,12 +2,33 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkAdjustment" id="adj_next_channel">
+    <property name="upper">15</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adj_next_msg_note">
+    <property name="upper">127</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adj_prev_channel">
+    <property name="upper">15</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="adj_prev_msg_note">
+    <property name="upper">127</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="window_main">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">MIDI Pipes</property>
     <property name="default_width">256</property>
     <property name="default_height">256</property>
     <signal name="destroy" handler="on_window_main_destroy" swapped="no"/>
+    <signal name="show" handler="on_window_main_show" swapped="no"/>
     <child>
       <placeholder/>
     </child>
@@ -30,28 +51,8 @@
             </attributes>
           </object>
           <packing>
-            <property name="x">19</property>
-            <property name="y">123</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="lbl_hello">
-            <property name="width_request">100</property>
-            <property name="height_request">34</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_right">43</property>
-            <property name="label" translatable="yes">MIDI Pipes</property>
-            <property name="single_line_mode">True</property>
-            <attributes>
-              <attribute name="font-desc" value="Ubuntu 10"/>
-              <attribute name="style" value="normal"/>
-              <attribute name="foreground" value="#000000000000"/>
-            </attributes>
-          </object>
-          <packing>
-            <property name="x">9</property>
-            <property name="y">9</property>
+            <property name="x">240</property>
+            <property name="y">40</property>
           </packing>
         </child>
         <child>
@@ -67,7 +68,7 @@
             <signal name="toggled" handler="on_radio_output_0_toggled" swapped="no"/>
           </object>
           <packing>
-            <property name="x">200</property>
+            <property name="x">240</property>
             <property name="y">80</property>
           </packing>
         </child>
@@ -85,23 +86,137 @@
             <signal name="toggled" handler="on_radio_output_1_toggled" swapped="no"/>
           </object>
           <packing>
-            <property name="x">200</property>
+            <property name="x">240</property>
             <property name="y">120</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="midion">
-            <property name="label" translatable="yes">midi on</property>
-            <property name="width_request">100</property>
+          <object class="GtkLabel" id="lbl_prev">
+            <property name="width_request">140</property>
             <property name="height_request">30</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <signal name="clicked" handler="on_midion_clicked" swapped="no"/>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">select previous</property>
+            <property name="single_line_mode">True</property>
+            <property name="xalign">0.079999998211860657</property>
+            <attributes>
+              <attribute name="font-desc" value="Ubuntu Mono 12"/>
+              <attribute name="style" value="normal"/>
+              <attribute name="foreground" value="#000000000000"/>
+            </attributes>
           </object>
           <packing>
             <property name="x">20</property>
-            <property name="y">76</property>
+            <property name="y">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="num_prev_channel">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_length">9</property>
+            <property name="input_purpose">number</property>
+            <property name="adjustment">adj_prev_channel</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">40</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="dd_prev_msg_type">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">70</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="num_prev_msg_note">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_length">127</property>
+            <property name="adjustment">adj_prev_msg_note</property>
+            <property name="numeric">True</property>
+            <signal name="value-changed" handler="on_num_prev_msg_note_value_changed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">100</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="lbl_next">
+            <property name="width_request">140</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">select next</property>
+            <property name="single_line_mode">True</property>
+            <property name="xalign">0.079999998211860657</property>
+            <attributes>
+              <attribute name="font-desc" value="Ubuntu Mono 12"/>
+              <attribute name="style" value="normal"/>
+              <attribute name="foreground" value="#000000000000"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">130</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="num_next_channel">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_length">9</property>
+            <property name="input_purpose">number</property>
+            <property name="adjustment">adj_next_channel</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">160</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="dd_next_msg_type">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">190</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="num_next_msg_note">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_length">127</property>
+            <property name="input_purpose">number</property>
+            <property name="adjustment">adj_next_msg_note</property>
+            <property name="numeric">True</property>
+            <signal name="value-changed" handler="on_num_next_msg_note_value_changed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">220</property>
           </packing>
         </child>
       </object>
