@@ -111,6 +111,19 @@
           </packing>
         </child>
         <child>
+          <object class="GtkComboBoxText" id="dd_prev_msg_type">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="changed" handler="on_dd_prev_msg_type_changed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">40</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkSpinButton" id="num_prev_channel">
             <property name="width_request">150</property>
             <property name="height_request">30</property>
@@ -120,18 +133,7 @@
             <property name="input_purpose">number</property>
             <property name="adjustment">adj_prev_channel</property>
             <property name="numeric">True</property>
-          </object>
-          <packing>
-            <property name="x">20</property>
-            <property name="y">40</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkComboBoxText" id="dd_prev_msg_type">
-            <property name="width_request">150</property>
-            <property name="height_request">30</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <signal name="value-changed" handler="on_num_prev_channel_value_changed" swapped="no"/>
           </object>
           <packing>
             <property name="x">20</property>
@@ -175,6 +177,19 @@
           </packing>
         </child>
         <child>
+          <object class="GtkComboBoxText" id="dd_next_msg_type">
+            <property name="width_request">150</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="changed" handler="on_dd_next_msg_type_changed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">20</property>
+            <property name="y">160</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkSpinButton" id="num_next_channel">
             <property name="width_request">150</property>
             <property name="height_request">30</property>
@@ -184,18 +199,7 @@
             <property name="input_purpose">number</property>
             <property name="adjustment">adj_next_channel</property>
             <property name="numeric">True</property>
-          </object>
-          <packing>
-            <property name="x">20</property>
-            <property name="y">160</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkComboBoxText" id="dd_next_msg_type">
-            <property name="width_request">150</property>
-            <property name="height_request">30</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <signal name="value-changed" handler="on_num_next_channel_value_changed" swapped="no"/>
           </object>
           <packing>
             <property name="x">20</property>
@@ -217,6 +221,22 @@
           <packing>
             <property name="x">20</property>
             <property name="y">220</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="chk_pass_midi_ctrl">
+            <property name="label" translatable="yes">pass through control commands</property>
+            <property name="width_request">100</property>
+            <property name="height_request">30</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="draw_indicator">True</property>
+            <signal name="toggled" handler="on_chk_pass_midi_ctrl_toggled" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">200</property>
+            <property name="y">10</property>
           </packing>
         </child>
       </object>

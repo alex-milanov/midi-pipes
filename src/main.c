@@ -1,12 +1,14 @@
 #include <gtk-3.0/gtk/gtk.h>
 #include <alsa/asoundlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include "inc/midi.h"
 
 // gtk stuff
 GtkWidget *g_lbl_midi_msg;
 GtkWidget *g_radio_output_0;
 GtkWidget *g_radio_output_1;
+GtkWidget *g_chk_pass_midi_ctrl;
 
 // select prev fields
 GtkWidget *g_lbl_prev;
@@ -48,12 +50,12 @@ struct NoteTypeMap note_type_map[3] = {
     .text = "Note On"
   },
   {
-    .type = SND_SEQ_EVENT_NOTEOFF,
-    .text = "Note Off"
-  },
-  {
     .type = SND_SEQ_EVENT_PGMCHANGE,
     .text = "Program Change"
+  },
+  {
+    .type = SND_SEQ_EVENT_NOTEOFF,
+    .text = "Note Off"
   }
 };
 
@@ -64,7 +66,16 @@ static int in_ports[3];
 static int out_ports[3];
 int out_port = 0;
 int npfd;
+bool pass_midi_ctrl = true;
 struct pollfd *pfd;
+
+char * note_type_text(int note_type) {
+  for (int i = 0; i < 3; i++) {
+    if (note_type == note_type_map[i].type)
+      return note_type_map[i].text;
+  }
+  return note_type_map[0].text;
+}
 
 void * midi_thread(void * context_ptr)
 {
@@ -72,42 +83,64 @@ void * midi_thread(void * context_ptr)
   char str_midi_msg[30] = {0};
   while (snd_seq_event_input(seq, &ev) >= 0) {
     //.. modify input event ..
-
+    bool is_midi_ctrl_command = false;
     // select prev
     if (
       ev->type == note_type_map[prev_pref.msg_type].type
-      && ev->data.note.channel == prev_pref.channel
-      && ev->data.note.note == prev_pref.msg_note
+      && ((
+        ev->type == SND_SEQ_EVENT_NOTEON
+        && ev->data.note.channel == prev_pref.channel
+        && ev->data.note.note == prev_pref.msg_note
+      ) || (
+        ev->type == SND_SEQ_EVENT_PGMCHANGE
+        && ev->data.control.value == prev_pref.msg_note
+      ))
     ) {
+      is_midi_ctrl_command = true;
       out_port = 0;
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g_radio_output_0), TRUE);
     // select next
     } else if (
       ev->type == note_type_map[next_pref.msg_type].type
-      && ev->data.note.channel == next_pref.channel
-      && ev->data.note.note == next_pref.msg_note
+      && ((
+        ev->type == SND_SEQ_EVENT_NOTEON
+        && ev->data.note.channel == next_pref.channel
+        && ev->data.note.note == next_pref.msg_note
+      ) || (
+        ev->type == SND_SEQ_EVENT_PGMCHANGE
+        && ev->data.control.value == next_pref.msg_note
+      ))
     ) {
+      is_midi_ctrl_command = true;
       out_port = 1;
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g_radio_output_1), TRUE);
     }
 
-    if (ev->type == SND_SEQ_EVENT_NOTEON) {
-
-      sprintf(str_midi_msg, "NoteON %d %d %d",
-        ev->data.note.channel,
-        ev->data.note.note,
-        ev->data.note.velocity
-      );
-      printf("%s\n", str_midi_msg);
-      printf("note_on enum %d\n", SND_SEQ_EVENT_NOTEON);
-      printf("note_off enum %d\n", SND_SEQ_EVENT_NOTEOFF);
-      printf("pgm_change enum %d\n", SND_SEQ_EVENT_PGMCHANGE);
-
-      gtk_label_set_text(GTK_LABEL(g_lbl_midi_msg), str_midi_msg);
-
+    switch (ev->type) {
+      case SND_SEQ_EVENT_NOTEON:
+        sprintf(str_midi_msg, "%s %d %d %d",
+          note_type_text(ev->type),
+          ev->data.note.channel,
+          ev->data.note.note,
+          ev->data.note.velocity
+        );
+        printf("%s\n", str_midi_msg);
+        gtk_label_set_text(GTK_LABEL(g_lbl_midi_msg), str_midi_msg);
+        break;
+      case SND_SEQ_EVENT_PGMCHANGE:
+        sprintf(str_midi_msg, "%s %d",
+          note_type_text(ev->type),
+          ev->data.control.value
+        );
+        printf("%s\n", str_midi_msg);
+        gtk_label_set_text(GTK_LABEL(g_lbl_midi_msg), str_midi_msg);
+        break;
     }
 
     while(gtk_events_pending()) gtk_main_iteration();
+
+    if (is_midi_ctrl_command && !pass_midi_ctrl)
+      continue;
 
     snd_seq_ev_set_source(ev, out_ports[out_port]);
     snd_seq_ev_set_subs( ev );
@@ -145,6 +178,8 @@ int main(int argc, char *argv[])
     g_lbl_midi_msg = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_midi_msg"));
     g_radio_output_0 = GTK_WIDGET(gtk_builder_get_object(builder, "radio_output_0"));
     g_radio_output_1 = GTK_WIDGET(gtk_builder_get_object(builder, "radio_output_1"));
+    g_chk_pass_midi_ctrl = GTK_WIDGET(gtk_builder_get_object(builder, "chk_pass_midi_ctrl"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g_chk_pass_midi_ctrl), pass_midi_ctrl);
 
     // select prev fields
     g_lbl_prev = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_prev"));
@@ -187,11 +222,23 @@ void on_window_main_show()
 }
 
 // select prev
+void on_dd_prev_msg_type_changed(GtkComboBox *comboBox, gpointer d) {
+  prev_pref.msg_type = (int)gtk_combo_box_get_active(comboBox);
+}
+void on_num_prev_channel_value_changed(GtkSpinButton *spinButton,  gpointer d) {
+  prev_pref.channel = (int)gtk_spin_button_get_value(spinButton);
+}
 void on_num_prev_msg_note_value_changed(GtkSpinButton *spinButton,  gpointer d) {
   prev_pref.msg_note = (int)gtk_spin_button_get_value(spinButton);
-  // printf("spin-button1-vlaue: %f\n", gtk_spin_button_get_value(spinButton));
 }
+
 // select next
+void on_dd_next_msg_type_changed(GtkComboBox *comboBox, gpointer d) {
+  next_pref.msg_type = (int)gtk_combo_box_get_active(comboBox);
+}
+void on_num_next_channel_value_changed(GtkSpinButton *spinButton,  gpointer d) {
+  next_pref.channel = (int)gtk_spin_button_get_value(spinButton);
+}
 void on_num_next_msg_note_value_changed(GtkSpinButton *spinButton,  gpointer d) {
   next_pref.msg_note = (int)gtk_spin_button_get_value(spinButton);
   // printf("spin-button2-vlaue: %f\n", gtk_spin_button_get_value(spinButton));
@@ -207,6 +254,11 @@ void on_radio_output_1_toggled (GtkToggleButton *togglebutton, GtkLabel *label)
 {
     out_port = 1;
     // if (gtk_toggle_button_get_active(togglebutton)) out_port = 1;
+}
+
+void on_chk_pass_midi_ctrl_toggled (GtkCheckButton *checkButton)
+{
+  pass_midi_ctrl = (bool)gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkButton));
 }
 
 // called when window is closed
