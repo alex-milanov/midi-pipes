@@ -44,7 +44,7 @@ struct NoteTypeMap {
   char text[20];
 };
 
-struct NoteTypeMap note_type_map[3] = {
+struct NoteTypeMap note_type_map[4] = {
   {
     .type = SND_SEQ_EVENT_NOTEON,
     .text = "Note On"
@@ -52,6 +52,10 @@ struct NoteTypeMap note_type_map[3] = {
   {
     .type = SND_SEQ_EVENT_PGMCHANGE,
     .text = "Program Change"
+  },
+  {
+    .type = SND_SEQ_EVENT_CONTROLLER,
+    .text = "Controller"
   },
   {
     .type = SND_SEQ_EVENT_NOTEOFF,
@@ -94,6 +98,9 @@ void * midi_thread(void * context_ptr)
       ) || (
         ev->type == SND_SEQ_EVENT_PGMCHANGE
         && ev->data.control.value == prev_pref.msg_note
+      ) || (
+        ev->type == SND_SEQ_EVENT_CONTROLLER
+        && ev->data.control.param == (unsigned int) prev_pref.msg_note
       ))
     ) {
       is_midi_ctrl_command = true;
@@ -109,6 +116,9 @@ void * midi_thread(void * context_ptr)
       ) || (
         ev->type == SND_SEQ_EVENT_PGMCHANGE
         && ev->data.control.value == next_pref.msg_note
+      )|| (
+        ev->type == SND_SEQ_EVENT_CONTROLLER
+        && ev->data.control.param == (unsigned int) next_pref.msg_note
       ))
     ) {
       is_midi_ctrl_command = true;
@@ -136,6 +146,14 @@ void * midi_thread(void * context_ptr)
         sprintf(str_midi_msg, "%s %d",
           note_type_text(ev->type),
           ev->data.control.value
+        );
+        printf("%s\n", str_midi_msg);
+        gtk_label_set_text(GTK_LABEL(g_lbl_midi_msg), str_midi_msg);
+        break;
+      case SND_SEQ_EVENT_CONTROLLER:
+        sprintf(str_midi_msg, "%s %d",
+          note_type_text(ev->type),
+          ev->data.control.param
         );
         printf("%s\n", str_midi_msg);
         gtk_label_set_text(GTK_LABEL(g_lbl_midi_msg), str_midi_msg);
@@ -177,9 +195,11 @@ void on_spinbutton_value_changed_to_int(GtkSpinButton *spinButton, int *d) {
 void on_type_change_toggle_widget(GtkComboBox *comboBox, GtkWidget *widget) {
   switch ((int)gtk_combo_box_get_active(comboBox)) {
     case 0:
+    case 3:
       gtk_widget_show(widget);
       break;
     case 1:
+    case 2:
       gtk_widget_hide(widget);
       break;
   }
@@ -215,6 +235,7 @@ int main(int argc, char *argv[])
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_prev_msg_type), note_type_map[0].text);
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_prev_msg_type), note_type_map[1].text);
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_prev_msg_type), note_type_map[2].text);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_prev_msg_type), note_type_map[3].text);
     gtk_combo_box_set_active(GTK_COMBO_BOX(g_dd_prev_msg_type), prev_pref.msg_type);
     g_signal_connect(g_dd_prev_msg_type, "changed",
       G_CALLBACK(on_combobox_changed_to_int), &prev_pref.msg_type);
@@ -237,6 +258,7 @@ int main(int argc, char *argv[])
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_next_msg_type), note_type_map[0].text);
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_next_msg_type), note_type_map[1].text);
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_next_msg_type), note_type_map[2].text);
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(g_dd_next_msg_type), note_type_map[3].text);
     gtk_combo_box_set_active(GTK_COMBO_BOX(g_dd_next_msg_type), next_pref.msg_type);
     g_signal_connect(g_dd_next_msg_type, "changed",
       G_CALLBACK(on_combobox_changed_to_int), &next_pref.msg_type);
