@@ -74,7 +74,7 @@ bool pass_midi_ctrl = true;
 struct pollfd *pfd;
 
 char * note_type_text(int note_type) {
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     if (note_type == note_type_map[i].type)
       return note_type_map[i].text;
   }
@@ -213,7 +213,8 @@ int main(int argc, char *argv[])
     gtk_init(&argc, &argv);
 
     builder = gtk_builder_new();
-    gtk_builder_add_from_file (builder, "window_main.glade", NULL);
+    // gtk_builder_add_from_file (builder, "window_main.glade", NULL);
+    gtk_builder_add_from_resource (builder, "/gui/window_main.glade", NULL);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "window_main"));
     gtk_builder_connect_signals(builder, NULL);

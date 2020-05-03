@@ -1,0 +1,5 @@
+<gresources>
+  <gresource prefix="gui">
+    <file preprocess="xml-stripblanks">window_main.glade</file>
+  </gresource>
+</gresources>
